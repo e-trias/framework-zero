@@ -1,6 +1,6 @@
 /*
   Framework Zero
-  The lightweight framework for single purpose apps.
+  Lightweight framework for single purpose apps.
   Version 0.1
 
   The MIT License (MIT)
