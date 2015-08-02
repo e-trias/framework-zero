@@ -1,9 +1,10 @@
-framework-zero
-==============
+# Framework Zero
 
 _Lightweight framework for single purpose apps_
 
 I created this for tiny cf apps that do mostly one thing and need all the speed they can get while also having some shared convenience functions.
+
+--
 
 ## To use the framework:
 
