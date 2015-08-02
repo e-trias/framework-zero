@@ -31,6 +31,10 @@ component
   this.version = 0.1;
   this.name = hash( getBaseTemplatePath());
   this.root = getDirectoryFromPath( getBaseTemplatePath()) & "../../";
+  this.defaultConfig = {
+    "appIsLive" = true,
+    "fileUploads" = expandPath( "../../../ProjectsTemporaryFiles/files_" & this.name )
+  };
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   public void function onApplicationStart(){
@@ -49,19 +53,7 @@ component
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   private struct function generateConfig( string site = cgi.server_name ){
     // DEFAULT:
-    var config = {
-      "appIsLive" = true,
-      "fileUploads" = expandPath( "../../../ProjectsTemporaryFiles/files_" & this.name ),
-      "fallBackImage" = this.root & "/inc/img/noimg.png",
-      "imageSizes" = {
-        "large"   = [1000,500],
-        "medium"  = [250,250],
-        "small"   = [100,100],
-        "logo"    = [200,100],
-        "pdflogo" = [500,300],
-        "square"  = [216,216]
-      }
-    };
+    var config = this.defaultConfig;
 
     var userConfig = deserializeJSON( fileRead( this.root & "/config/" & site & ".json" ));
 
