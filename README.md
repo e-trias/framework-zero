@@ -1,7 +1,7 @@
 framework-zero
 ==============
 
-Lightweight framework for single purpose apps
+_Lightweight framework for single purpose apps_
 
 I created this for tiny cf apps that do mostly one thing and need all the speed they can get while also having some shared convenience functions.
 
@@ -23,6 +23,6 @@ If you need to manipulate stuff in `onApplicationStart` or `onRequestStart`, cal
 
 ## Features
 
-- config managment
-- application flow
-- helper methods (right now, just nil() to return null)
+- Config managment
+- Application flow
+- Helper methods (right now, just nil() to return null)
