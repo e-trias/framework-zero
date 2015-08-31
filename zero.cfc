@@ -26,42 +26,48 @@
   THE SOFTWARE.
  */
 
-component
-{
-  this.version = 0.1;
+component{
+  this.version = 0.2;
   this.name = hash( getBaseTemplatePath());
-  this.root = getDirectoryFromPath( getBaseTemplatePath()) & "../../";
+  this.root = getDirectoryFromPath( getBaseTemplatePath());
+  this.mappings["/root"] = this.root;
+  this.configFiles = this.root & "../../config";
   this.defaultConfig = {
-    "appIsLive" = true,
-    "fileUploads" = expandPath( "../../../ProjectsTemporaryFiles/files_" & this.name )
+    "appIsLive" = true
   };
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   public void function onApplicationStart(){
-    application.config = generateConfig();
+    lock name="_fw0_#this.name#_appstart" timeout="3" type="exclusive" {
+      application.config = generateConfig();
+    }
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   public void function onRequestStart(){
+    for( var kv in url ) {
+      if( kv contains ';' ) {
+        url[listRest( kv, ';' )] = url[kv];
+        structDelete( url, kv );
+      }
+    };
+
     if( structKeyExists( url, "reload" )){
       onApplicationStart();
     }
 
-    variables.config = application.config;
+    lock name="_fw0_#this.name#_reqstart" timeout="3" type="readonly" {
+      request.config = application.config;
+    }
   }
 
   // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   private struct function generateConfig( string site = cgi.server_name ){
     // DEFAULT:
     var config = this.defaultConfig;
+    var userConfig = deserializeJSON( fileRead( "#this.configFiles#/#site#.json" ));
 
-    var userConfig = deserializeJSON( fileRead( this.root & "/config/" & site & ".json" ));
-
-    for( var key in config ){
-      if( structKeyExists( userConfig, key )){
-        config[key] = userConfig[key];
-      }
-    }
+    structAppend( config, userConfig, true );
 
     return config;
   }
