@@ -36,14 +36,12 @@ component{
     "appIsLive" = true
   };
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  public void function onApplicationStart(){
+    public void function onApplicationStart(){
     lock name="_fw0_#this.name#_appstart" timeout="3" type="exclusive" {
-      application.config = generateConfig();
+      application.config = readConfig();
     }
   }
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   public void function onRequestStart(){
     for( var kv in url ) {
       if( kv contains ';' ) {
@@ -52,7 +50,9 @@ component{
       }
     };
 
-    if( structKeyExists( url, "reload" )){
+    request.reset = structKeyExists( url, "reload" );
+
+    if( request.reset ) {
       onApplicationStart();
     }
 
@@ -61,17 +61,23 @@ component{
     }
   }
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  private struct function generateConfig( string site = cgi.server_name ){
+  private struct function readConfig( string site = cgi.server_name ) {
     // DEFAULT:
-    var config = this.defaultConfig;
+    var config = this.defaultConfig; // by reference, so you can override the values in your own application.cfc
     var userConfig = deserializeJSON( fileRead( "#this.configFiles#/#site#.json" ));
 
+    // also append nested struct keys:
+    for( var key in userConfig ) {
+      if( isStruct( userConfig[key] ) && structKeyExists( config, key )) {
+        structAppend( userConfig[key], config[key] );
+      }
+    }
+
+    // copy the other keys:
     structAppend( config, userConfig, true );
 
     return config;
   }
 
-  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   private void function nil(){}
 }
