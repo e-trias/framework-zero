@@ -27,16 +27,14 @@
  */
 
 component{
-  this.version = 0.2;
+  this.version = 0.3;
   this.name = hash( getBaseTemplatePath());
   this.root = getDirectoryFromPath( getBaseTemplatePath());
   this.mappings["/root"] = this.root;
   this.configFiles = this.root & "../../config";
-  this.defaultConfig = {
-    "appIsLive" = true
-  };
+  this.defaultConfig = {};
 
-    public void function onApplicationStart(){
+  public void function onApplicationStart(){
     lock name="_fw0_#this.name#_appstart" timeout="3" type="exclusive" {
       application.config = readConfig();
     }
@@ -61,22 +59,27 @@ component{
     }
   }
 
-  private struct function readConfig( string site = cgi.server_name ) {
-    // DEFAULT:
-    var config = this.defaultConfig; // by reference, so you can override the values in your own application.cfc
-    var userConfig = deserializeJSON( fileRead( "#this.configFiles#/#site#.json" ));
+  private struct function readConfig( string site=cgi.server_name ) {
+    var siteConfig = deserializeJSON( fileRead( "#this.configFiles#/#site#.json" ));
+    var defaultConfig = deserializeJSON( fileRead( this.configFiles & "/default.json" ));
+    var applicationConfig = this.defaultConfig;
+    var mergedConfig = mergeStructs( applicationConfig, defaultConfig );
 
+    return mergeStructs( siteConfig, mergedConfig );
+  }
+
+  private struct function mergeStructs( required struct from, struct to={}) {
     // also append nested struct keys:
-    for( var key in userConfig ) {
-      if( isStruct( userConfig[key] ) && structKeyExists( config, key )) {
-        structAppend( userConfig[key], config[key] );
+    for( var key in from ) {
+      if( isStruct( from[key] ) && structKeyExists( to, key )) {
+        structAppend( from[key], to[key] );
       }
     }
 
     // copy the other keys:
-    structAppend( config, userConfig, true );
+    structAppend( to, from, true );
 
-    return config;
+    return to;
   }
 
   private void function nil(){}
