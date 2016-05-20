@@ -32,7 +32,9 @@ component{
   this.root = getDirectoryFromPath( getBaseTemplatePath());
   this.mappings["/root"] = this.root;
   this.configFiles = this.root & "../../config";
-  this.defaultConfig = {};
+  this.defaultConfig = {
+    "nukescript" = "populate.sql"
+  };
 
   public void function onApplicationStart(){
     lock name="_fw0_#this.name#_appstart" timeout="3" type="exclusive" {
@@ -61,11 +63,15 @@ component{
 
   private struct function readConfig( string site=cgi.server_name ) {
     var siteConfig = deserializeJSON( fileRead( "#this.configFiles#/#site#.json" ));
-    var defaultConfig = deserializeJSON( fileRead( this.configFiles & "/default.json" ));
-    var applicationConfig = this.defaultConfig;
-    var mergedConfig = mergeStructs( applicationConfig, defaultConfig );
 
-    return mergeStructs( siteConfig, mergedConfig );
+    var applicationConfig = this.defaultConfig;
+
+    if( fileExists( this.configFiles & "/default.json" )) {
+      var defaultConfig = deserializeJSON( fileRead( this.configFiles & "/default.json" ));
+      applicationConfig = mergeStructs( applicationConfig, defaultConfig );
+    }
+
+    return mergeStructs( siteConfig, applicationConfig );
   }
 
   private struct function mergeStructs( required struct from, struct to={}) {
