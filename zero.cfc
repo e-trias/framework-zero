@@ -27,66 +27,65 @@
  */
 
 component{
-  this.version = 0.3;
-  this.name = hash( getBaseTemplatePath());
-  this.root = getDirectoryFromPath( getBaseTemplatePath());
-  this.mappings["/root"] = this.root;
-  this.configFiles = this.root & "../../config";
-  this.defaultConfig = {
-    "nukescript" = "populate.sql"
-  };
+  this.version = 0.5;
+  this.name = hash( getBaseTemplatePath() );
+  this.root = cleanPath( getDirectoryFromPath( getBaseTemplatePath() ) );
+  this.mappings[ '/root' ] = this.root;
+  this.configFiles = this.root & 'config';
+  this.defaultConfig = { 'nukescript' = 'populate.sql' };
 
-  public void function onApplicationStart(){
-    lock name="_fw0_#this.name#_appstart" timeout="3" type="exclusive" {
-      application.config = readConfig();
-    }
+  public void function onApplicationStart() {
+    var mstng = createObject( 'mustang-staging.base' ).init( {} );
+    application.config = mstng.readConfig();
   }
 
-  public void function onRequestStart(){
-    for( var kv in url ) {
-      if( kv contains ';' ) {
-        url[listRest( kv, ';' )] = url[kv];
-        structDelete( url, kv );
+  public void function onRequestStart() {
+    for ( var kv in url ) {
+      if ( kv contains ';' ) {
+        url[ kv.listRest( ';' ) ] = url[ kv ];
+        url.delete( kv );
       }
     };
 
-    request.reset = structKeyExists( url, "reload" );
+    request.reset = structKeyExists( url, 'reload' );
 
-    if( request.reset ) {
+    if ( request.reset ) {
       onApplicationStart();
     }
 
-    lock name="_fw0_#this.name#_reqstart" timeout="3" type="readonly" {
-      request.config = application.config;
-    }
+    request.config = application.config;
   }
 
-  private struct function readConfig( string site=cgi.server_name ) {
-    var siteConfig = deserializeJSON( fileRead( "#this.configFiles#/#site#.json" ));
+  private string function cleanPath( string input, boolean addTrailingSlash = true ) {
+    var result = [];
 
-    var applicationConfig = this.defaultConfig;
-
-    if( fileExists( this.configFiles & "/default.json" )) {
-      var defaultConfig = deserializeJSON( fileRead( this.configFiles & "/default.json" ));
-      applicationConfig = mergeStructs( applicationConfig, defaultConfig );
+    if ( server.os.name contains 'windows' ) {
+      var driveLetter = input.listFirst( ':' );
+      input = input.listRest( ':' );
     }
 
-    return mergeStructs( siteConfig, applicationConfig );
-  }
+    var path = input.listToArray( '/\' );
 
-  private struct function mergeStructs( required struct from, struct to={}) {
-    // also append nested struct keys:
-    for( var key in from ) {
-      if( isStruct( from[key] ) && structKeyExists( to, key )) {
-        structAppend( from[key], to[key] );
+    for ( var item in path ) {
+      switch ( item ) {
+        case '.':
+          continue;
+
+        case '..':
+          var pathLength = result.len();
+          if ( pathLength > 0 ) {
+            result.deleteAt( pathLength );
+          }
+          continue;
+
+        default:
+          result.append( item );
       }
     }
 
-    // copy the other keys:
-    structAppend( to, from, true );
-
-    return to;
+    return ( isNull( driveLetter ) ? '' : driveLetter & ':' ) & '/' & result.toList( '/' ) & ( addTrailingSlash ? '/' : '' );
   }
 
-  private void function nil(){}
+  private void function nil() {
+  }
 }
