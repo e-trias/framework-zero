@@ -36,7 +36,7 @@ component{
 
   public void function onApplicationStart() {
     var mstng = createObject( 'mustang-staging.base' ).init( {} );
-    application.config = mstng.readConfig();
+    application.config = mstng.readConfig( configRoot = this.root );
   }
 
   public void function onRequestStart() {
