@@ -35,7 +35,7 @@ component{
   this.defaultConfig = { 'nukescript' = 'populate.sql' };
 
   public void function onApplicationStart() {
-    var mstng = createObject( 'mustang-staging.base' ).init( {} );
+    var mstng = createObject( 'mustang.base' ).init( {} );
     application.config = mstng.readConfig( configRoot = this.root );
   }
 
